@@ -1,9 +1,10 @@
 const user = require("../Models/userSchema");
-const role= require('../Models/roleSchema')
+const role = require("../Models/roleSchema");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { json } = require("body-parser");
-
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId
 const secret = process.env.JWT_TOKEN_SECRET;
 // console.log('the token of env',process.env.JWT_TOKEN_SECRET);
 
@@ -95,9 +96,9 @@ exports.login = async (req, res) => {
       res.cookie("access_token", token).status(200).json({
         message: "logged in successfully",
         token: token,
-      })
+      });
     } else {
-        console.log("in else ")
+      console.log("in else ");
       res.status(402).json({
         message: "incorrect Password",
       });
@@ -117,30 +118,59 @@ exports.logOut = (req, res) => {
 };
 
 exports.permission = async (req, res) => {
-try {
-  console.log("ok",req.id);
+  try {
+    console.log("ok", req.id);
 
-  // const userData= await user.findOne({_id:req.id}).populate('roleId')
-  // const roleId= await role.findOne({_id:userData.roleId})
-  // console.log("userData  role data : ",userData)
+    const userData= await user.findOne({_id:req.id})
+    // const roleId= await role.findOne({_id:userData.roleId})
+    console.log("userData  role data : ",userData.roleId)
 
-  const detail= await user.aggregate(
-    [
-      {
-        $lookup:
-        {
-          from:"role",
-          localField:"roleId",
-          foreignField:"name",
-          as: "userRoles"
-        }
+    // const detail= await user.aggregate(
+    //   [
+    //     {
+    //       $lookup:
+    //       {
+    //         from:"role",
+    //         localField:"roleId",
+    //         foreignField:"name",
+    //         as: "userRoles"
+    //       }
+    //     }
+    //   ]
+    // )
+
+    // const detail = await role.aggregate([
+    //   {
+    //     $match: { _id: ObjectId('632ca1aec273c5a5f5ed1b72') },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "permissions",
+    //       localField: "permissionId",
+    //       foreignField: "_id",
+    //       as: "permission",
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       name:1, "permission.name": 1,
+    //     },
+    //   },
+    // ]);
+
+
+
+    const detail= await user.findOne(ObjectId(req.id)).populate({
+      path:'roleId',
+      populate:{
+        path:'permissionId',
+        model:'permission'
       }
-    ]
-  )
+    })
 
-
-return  res.send(detail);
-} catch (error) {
-  res.send(error.message)
-}
+    console.log("the detail: ", detail);
+    return res.send(detail);
+  } catch (error) {
+    res.send(error.message);
+  }
 };

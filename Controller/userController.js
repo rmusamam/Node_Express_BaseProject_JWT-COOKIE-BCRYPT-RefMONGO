@@ -3,6 +3,8 @@ const role = require("../Models/roleSchema");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { json } = require("body-parser");
+
+
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId
 const secret = process.env.JWT_TOKEN_SECRET;
@@ -21,8 +23,25 @@ exports.show = async (req, res) => {
 
 exports.signUP = async (req, res) => {
   try {
+    let file
+    let uploadPath
+    
+    //|| Object.keys(req.files).length===0
+    if(req.files ){
+      console.log('file is attached', req.files)
+      
+      file=req.files.file
+      uploadPath=__dirname+'ASSETS/PROFILE'
+      file.mv(uploadPath,(err)=>{
+        if(err){
+          return res.status(500).send(err)
+        }
+        return res.send('got file')
+      })
+    }
+    console.log('the sign up route')
     const salt = await bcryptjs.genSalt(10);
-
+    
     const hashedPassword = await bcryptjs.hash(req.body.password, salt);
     console.log(req.body, salt, "this is hash password", hashedPassword);
 

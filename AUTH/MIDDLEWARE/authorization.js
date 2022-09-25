@@ -53,7 +53,8 @@ exports.loginValidation= async (req,res,next)=>{
     }
 }
 exports.signUpValidation= async(req,res,next)=>{
-    const newUser= await user.findOne({email:req.body.email})
+    try {
+        const newUser= await user.findOne({email:req.body.email})
     console.log("in sign UP validation ",newUser)
     if(newUser){
         console.log('user exist try with an other ID')
@@ -61,6 +62,12 @@ exports.signUpValidation= async(req,res,next)=>{
             message:"user Already exist"
         })
     }else{
-        next()
+        return next()
+    }
+    } catch (error) {
+        res.status(404).json({
+            message:"there is some error in signUP middleWare "
+            ,error:error.message
+        })
     }
 }

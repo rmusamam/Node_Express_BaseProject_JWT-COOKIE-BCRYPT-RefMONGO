@@ -2,6 +2,7 @@ const bodyParser = require("body-parser")
 const express= require("express")
 const app=express()
 const cookieParser = require("cookie-parser");
+const fileUpload = require('express-fileupload')
 
 
 const dotenv=require('dotenv')
@@ -9,6 +10,7 @@ dotenv.config()
 
 app.use(bodyParser.json())
 app.use(cookieParser());
+app.use(fileUpload())
 
 const userRoute=require('./Routes/user')
 const permissionRoute= require('./Routes/permission')

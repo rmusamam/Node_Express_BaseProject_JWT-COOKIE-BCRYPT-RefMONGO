@@ -54,11 +54,12 @@ exports.loginValidation= async (req,res,next)=>{
 }
 exports.signUpValidation= async(req,res,next)=>{
     try {
+        // console.log('the req.body: ',req)
         const newUser= await user.findOne({email:req.body.email})
-    console.log("in sign UP validation ",newUser)
+    // console.log("in sign UP validation ",newUser)
     if(newUser){
-        console.log('user exist try with an other ID')
-        res.sendStatus(402).json({
+        // console.log('user exist try with an other ID')
+        return res.status(404).json({
             message:"user Already exist"
         })
     }else{

@@ -10,7 +10,7 @@ const schema= Schema({
     },
     permissionId:{
             type: [Schema.Types.ObjectId], 
-            default:[mongoose.Types.ObjectId('632c76f9a9df5cb55211ca4b')],
+            default:[mongoose.Types.ObjectId('632ca0028f648c883e2f9389')],
             ref: 'permission' 
          },
 

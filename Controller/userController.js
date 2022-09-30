@@ -3,10 +3,11 @@ const role = require("../Models/roleSchema");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { json } = require("body-parser");
+const multer = require("multer");
+const path = require("path");
 
-
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId
+const mongoose = require("mongoose");
+const ObjectId = mongoose.Types.ObjectId;
 const secret = process.env.JWT_TOKEN_SECRET;
 // console.log('the token of env',process.env.JWT_TOKEN_SECRET);
 
@@ -23,37 +24,51 @@ exports.show = async (req, res) => {
 
 exports.signUP = async (req, res) => {
   try {
-    let file
-    let uploadPath
-    
+    let file;
+    let uploadPath;
+
     //|| Object.keys(req.files).length===0
-    if(req.files ){
-      console.log('file is attached', req.files)
-      
-      file=req.files.file
-      uploadPath=__dirname+'ASSETS/PROFILE'
-      file.mv(uploadPath,(err)=>{
-        if(err){
-          return res.status(500).send(err)
-        }
-        return res.send('got file')
-      })
+    if (req.files) {
+      // console.log('file is attached', req.files)
+      file = req.files.image;
+      // console.log("the mime type: ", file.mimetype);
+      const types = ["jpg", "jpeg", "png"];
+      const isValidMimeType = types.includes(file.mimetype?.split("/")[1]);
+      // console.log("isValidMimeType: ", isValidMimeType);
+      if (isValidMimeType) {
+        // console.log("this is the pdf file ");
+        uploadPath = `${__dirname}/../images/` + file.name;
+        // console.log('file: ',file,"upload file : ",uploadPath)
+        file.mv(uploadPath, (err) => {
+          if (err) {
+            console.log("the error while saving file", err);
+            return res.status(500);
+          }
+          // res.json({message:'got file'})
+          // console.log("got file");
+        });
+      } else {
+        return res.status(400).json({
+          message: "only jpeg,jpg or png file are allowed ",
+        });
+      }
     }
-    console.log('the sign up route')
+
     const salt = await bcryptjs.genSalt(10);
-    
+
     const hashedPassword = await bcryptjs.hash(req.body.password, salt);
     console.log(req.body, salt, "this is hash password", hashedPassword);
 
     const addUser = await user.create({
       ...req.body,
       password: hashedPassword,
+      profileImage: file.name,
     });
 
     res.send(addUser);
   } catch (error) {
-    res.status(400).json({
-      message: "Failed to update post from DB",
+    res.status(404).json({
+      message: "Failed to process SignUp",
       error: error.message,
     });
   }
@@ -81,17 +96,12 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    // console.log(req.params.id)
-    // console.log( 'this would be error',await user.find(req.params.id))
+    const deletedUser = await user.findByIdAndUpdate(req.params.id, {
+      isActive: 2,
+    });
+    findUser = await user.findById(req.params.id);
 
-    const deletedUser = await user.findById(req.params.id);
-    deletedUser.isActive = 2;
-    console.log("the deleted user : ", deletedUser);
-    console.log("the active flag ", deletedUser.isActive);
-    res.send(deletedUser);
-    // res.write(deletedUser.isActive)
-    // res.end()
-    // res.sendStatus(200)
+    res.send(findUser);
   } catch (err) {
     res.status(400).json({
       message: "Failed to update post from DB",
@@ -138,57 +148,36 @@ exports.logOut = (req, res) => {
 
 exports.permission = async (req, res) => {
   try {
-    console.log("ok", req.id);
+    // console.log("ok", req.id);
 
-    const userData= await user.findOne({_id:req.id})
+    const userData = await user.findOne({ _id: req.id });
     // const roleId= await role.findOne({_id:userData.roleId})
-    console.log("userData  role data : ",userData.roleId)
+    // console.log("userData  role data : ",userData)
+    // console.log("userData  role ID : ",userData.roleId)
 
-    // const detail= await user.aggregate(
-    //   [
-    //     {
-    //       $lookup:
-    //       {
-    //         from:"role",
-    //         localField:"roleId",
-    //         foreignField:"name",
-    //         as: "userRoles"
-    //       }
-    //     }
-    //   ]
-    // )
+    const detail = await user.findOne({ _id: req.id }).populate({
+      path: "roleId",
+      populate: {
+        path: "permissionId",
+        model: "permission",
+      },
+    });
 
-    // const detail = await role.aggregate([
-    //   {
-    //     $match: { _id: ObjectId('632ca1aec273c5a5f5ed1b72') },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "permissions",
-    //       localField: "permissionId",
-    //       foreignField: "_id",
-    //       as: "permission",
-    //     },
-    //   },
-    //   {
-    //     $project: {
-    //       name:1, "permission.name": 1,
-    //     },
-    //   },
-    // ]);
+    // console.log("the detail: ", detail.roleId.permissionId);
 
+    let permissions = detail.roleId.permissionId;
+    //  permissions.map((a)=>{
+    //   console.log(a)
+    //   return a
+    // })
 
+    permissions.forEach((element) => {
+      console.log("this is element: ", element.name);
+      return element.name
+    });
+    // console.log(permissions);
 
-    const detail= await user.findOne(ObjectId(req.id)).populate({
-      path:'roleId',
-      populate:{
-        path:'permissionId',
-        model:'permission'
-      }
-    })
-
-    console.log("the detail: ", detail);
-    return res.send(detail);
+    return res.send(permissions);
   } catch (error) {
     res.send(error.message);
   }

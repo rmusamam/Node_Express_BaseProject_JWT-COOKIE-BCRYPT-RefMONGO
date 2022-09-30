@@ -7,7 +7,7 @@ const schema= mongoose.Schema({
       required:true
    },
    isActive:{
-      type:Number,
+      type:Number,   
       default:1,
       maxLength:1
   }

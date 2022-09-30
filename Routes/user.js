@@ -4,6 +4,9 @@ const {permission}= require('../AUTH/MIDDLEWARE/authorization')
 const {loginValidation}= require('../AUTH/MIDDLEWARE/authorization')
 const {signUpValidation}= require('../AUTH/MIDDLEWARE/authorization')
 
+
+
+
 router.route("/").get(userController.show);
 router.route("/signUp/").post(signUpValidation,userController.signUP);
 router.route('/login').post(loginValidation,userController.login);
